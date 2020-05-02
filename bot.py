@@ -17,15 +17,6 @@ markup_main_keyboard = ReplyKeyboardMarkup(reply_keyboardmain, one_time_keyboard
 # Клавиатура, которая появляется, когда выбирать нечего, например, при вводе названия
 reply_keyboardback = [['Вернуться к началу']]
 markup_back = ReplyKeyboardMarkup(reply_keyboardback, one_time_keyboard=False, resize_keyboard=True)
-# Когда объектов больше пяти, для их выбора появляется эта клавиатура
-reply_keyboardmorethan5 = [['1', '2', '3'], ['4', '5', '>']]
-markup_morethanfive = ReplyKeyboardMarkup(reply_keyboardmorethan5, one_time_keyboard=False, resize_keyboard=True)
-# Когда объектов больше десяти, для их выбора появляется эта клавиатура
-reply_keyboardmorethan10 = [['<', '6', '7'], ['8', '9', '10']]
-markup_morethanten = ReplyKeyboardMarkup(reply_keyboardmorethan10, one_time_keyboard=False, resize_keyboard=True)
-# Когда объектов пять, для их выбора появляется эта клавиатура
-reply_keyboardmorethan5 = [['1', '2'], ['3', '4', '5']]
-markup_five = ReplyKeyboardMarkup(reply_keyboardmorethan5, one_time_keyboard=False, resize_keyboard=True)
 
 
 # Секретная функция удаления клавиатуры, на всякий случай
