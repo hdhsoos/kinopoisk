@@ -100,7 +100,6 @@ def messages(update, context):
     elif constant[0] == 'filmography':
         res = ''
         x = constant[1].career['actor']
-        x.reverse()
         if len(constant) == 2:
             if len(x) > 10:
                 for el in constant[1].career['actor'][:10]:
