@@ -7,10 +7,8 @@ from telegram import ReplyKeyboardMarkup
 from kinopoisk.movie import Movie
 from kinopoisk.person import Person
 
-# import pymorphy2
-
 # Токен; постоянная, которая запоминает выбор пользователя; все клавиатуры, которые будут использованы
-TOKEN = '1246543622:AAGV4wEzLqINoUKufPCU_KaMfAcfwg1KUgk'
+TOKEN = '1114970740:AAE7Mh_vIThMfR0FR7lZcCQMEu_jUl1A6Tk'
 constant = None
 # Основная клавиатура, выбор между поиском фильма и персоны
 reply_keyboardmain = [['Найти фильм по названию', 'Найти информацию о знаменитости']]
@@ -21,6 +19,9 @@ markup_back = ReplyKeyboardMarkup(reply_keyboardback, one_time_keyboard=False, r
 # Хотите увидеть фильмографию? Хотите увидеть актёрский состав?
 reply_keyboardyesornot = [['Да', 'Вернуться к началу']]
 markup_yesornot = ReplyKeyboardMarkup(reply_keyboardyesornot, one_time_keyboard=False, resize_keyboard=True)
+# Перелистывание страниц
+reply_keyboardpages = [['Ещё фильмы', 'Вернуться к началу']]
+markup_pages = ReplyKeyboardMarkup(reply_keyboardpages, one_time_keyboard=False, resize_keyboard=True)
 
 
 # Секретная функция удаления клавиатуры, на всякий случай
@@ -46,7 +47,9 @@ def messages(update, context):
     # понимаем, что непонятное словосочетание - фильм (или актёр).
     # При возвращении назад мы "обнуляем" постоянную.
     if mes == 'найти фильм по названию' and constant is None:
-        update.message.reply_text('Введите название фильма на русском или английском языке.', reply_markup=markup_back)
+        update.message.reply_text(
+            'Введите название фильма на русском или английском языке. Информация о сериалах недоступна.',
+            reply_markup=markup_back)
         constant = 'film_search'
     elif mes == 'найти информацию о знаменитости' and constant is None:
         update.message.reply_text('Введите имя знаменитости на русском или английском языке.', reply_markup=markup_back)
@@ -69,12 +72,12 @@ def messages(update, context):
                     movie.title, movie.plot, movie.tagline,
                     movie.year, movie.runtime, movie.rating), reply_markup=markup_yesornot)
             constant = ['cast', movie]
-    elif constant == 'cast':
+    elif constant[0] == 'cast':
         res = ''
         x = constant[1].actors
-        for el in x:
+        for el in x[:10]:
             res += '\n{}'.format(el)
-        if mes != 'да':
+        if mes == 'вернуться к началу':
             res = 'Хорошо, вернёмся'
         else:
             res = 'В фильме снимались:' + res
@@ -98,14 +101,39 @@ def messages(update, context):
         res = ''
         x = constant[1].career['actor']
         x.reverse()
-        for el in constant[1].career['actor']:
-            res += '\n{}'.format(el.movie)
-        if mes != 'да':
-            res = 'Хорошо, вернёмся'
+        if len(constant) == 2:
+            if len(x) > 10:
+                for el in constant[1].career['actor'][:10]:
+                    res += '\n{}'.format(el.movie)
+            else:
+                for el in constant[1].career['actor']:
+                    res += '\n{}'.format(el.movie)
+        elif constant[2] + 10 < len(x):
+            for el in constant[1].career['actor'][constant[2]:constant[2] + 10]:
+                res += '\n{}'.format(el.movie)
         else:
-            res = 'Вот фильмография:' + res
-        update.message.reply_text(res, reply_markup=markup_main_keyboard)
-        constant = None
+            for el in constant[1].career['actor'][constant[2]:len(x)]:
+                res += '\n{}'.format(el.movie)
+        if mes == 'вернуться к началу':
+            res = 'Хорошо, вернёмся'
+            update.message.reply_text(res, reply_markup=markup_main_keyboard)
+            constant = None
+        else:
+            if len(constant) == 2:
+                res = 'Вот фильмография:' + res
+                if len(x) > 10:
+                    update.message.reply_text(res, reply_markup=markup_pages)
+                    constant = constant + [10]
+                else:
+                    update.message.reply_text(res, reply_markup=markup_main_keyboard)
+                    constant = None
+            elif constant[2] + 10 < len(x):
+                update.message.reply_text(res, reply_markup=markup_pages)
+                constant = constant[0:2] + [constant[2] + 10]
+            else:
+                res += '\n\nФильмография кончилась.'
+                update.message.reply_text(res, reply_markup=markup_main_keyboard)
+                constant = None
 
 
 def main():
