@@ -6,7 +6,8 @@ from telegram import ReplyKeyboardRemove
 from telegram import ReplyKeyboardMarkup
 from kinopoisk.movie import Movie
 from kinopoisk.person import Person
-import pymorphy2
+
+# import pymorphy2
 
 # Токен; постоянная, которая запоминает выбор пользователя; все клавиатуры, которые будут использованы
 TOKEN = '1246543622:AAGV4wEzLqINoUKufPCU_KaMfAcfwg1KUgk'
@@ -17,6 +18,9 @@ markup_main_keyboard = ReplyKeyboardMarkup(reply_keyboardmain, one_time_keyboard
 # Клавиатура, которая появляется, когда выбирать нечего, например, при вводе названия
 reply_keyboardback = [['Вернуться к началу']]
 markup_back = ReplyKeyboardMarkup(reply_keyboardback, one_time_keyboard=False, resize_keyboard=True)
+# Хотите увидеть фильмографию? Хотите увидеть актёрский состав?
+reply_keyboardyesornot = [['Да', 'Вернуться к началу']]
+markup_yesornot = ReplyKeyboardMarkup(reply_keyboardyesornot, one_time_keyboard=False, resize_keyboard=True)
 
 
 # Секретная функция удаления клавиатуры, на всякий случай
@@ -51,66 +55,57 @@ def messages(update, context):
         update.message.reply_text("Хорошо, вернёмся.", reply_markup=markup_main_keyboard)
         constant = None
     elif constant == 'film_search':
-        constant = None
         movie_list = Movie.objects.search(mes)
         length = len(movie_list)  # Чтобы постоянно не пересчитывать длину функции
         if length == 0:
             update.message.reply_text('Извините, фильма с таким названием не найдено. Вернёмся к началу.',
                                       reply_markup=markup_main_keyboard)
-        elif length > 1:
-            n = length if length <= 10 else 10
-            comment = 'фильм'
-            # comment = pymorphy2.parse('фильм')[0] .make_agree_with_number(length).word
-            res = 'Найдено {} {}. Вот {} из них:\n'.format(length, comment, n)
-            for i in range(n):
-                res += movie_list[i].title + '\n'
-            res += 'Выберите один с помощью клавиатуры.'
-            reply_keyboardfilms = [[i + 1 for i in range(n // 2)], [i + 1 for i in range(n // 2, n)]]
-            markupfilmskeyboard = ReplyKeyboardMarkup(reply_keyboardfilms, one_time_keyboard=False,
-                                                      resize_keyboard=True)
-            update.message.reply_text(res, reply_markup=markupfilmskeyboard)
-            constant = ['film chosen', movie_list]
-        elif length == 1:
+            constant = None
+        elif length >= 1:
+            movie = Movie(id=movie_list[0].id)
+            movie.get_content('main_page')
             update.message.reply_text(
-                'Найден один фильм. Полное название - {}.\n{}\nСлоган - {}\nГод - {}\nДлительность - {}\nРейтинг фильма - {}'.format(
-                    movie_list[0].title, movie_list[0].plot, movie_list[0].tagline,
-                    movie_list[0].year, movie_list[0].runtime, movie_list[0].rating), reply_markup=markup_main_keyboard)
+                'Полное название - {}.\n{}\nСлоган - {}\nГод - {}\nДлительность - {}\nРейтинг фильма - {}\nХотите увидеть список актёров?'.format(
+                    movie.title, movie.plot, movie.tagline,
+                    movie.year, movie.runtime, movie.rating), reply_markup=markup_yesornot)
+            constant = ['cast', movie]
+    elif constant == 'cast':
+        res = ''
+        x = constant[1].actors
+        for el in x:
+            res += '\n{}'.format(el)
+        if mes != 'да':
+            res = 'Хорошо, вернёмся'
+        else:
+            res = 'В фильме снимались:' + res
+        update.message.reply_text(res, reply_markup=markup_main_keyboard)
+        constant = None
     elif constant == 'actor_search':
         actor_list = Person.objects.search(mes)
         length = len(actor_list)
         if length == 0:
             update.message.reply_text('Извините, знаменитости с таким именем найти не удалось. Вернёмся к началу.',
                                       reply_markup=markup_main_keyboard)
-        elif length == 1:
+            constant = None
+        elif length >= 1:
+            actor = Person(id=actor_list[0].id)
+            actor.get_content('main_page')
             update.message.reply_text(
-                'Имя - {}. '.format(
-                    actor_list[0].name), reply_markup=markup_main_keyboard)
-        elif length > 1:
-            n = length if length <= 10 else 10
-            comment = 'знаменитость'
-            #comment = pymorphy2.parse('знаменитость')[0].make_agree_with_number(length).word
-            res = 'Найдено {} {}. Вот {} из них:\n'.format(length,
-                                                           comment, n)
-            for i in range(n):
-                res += actor_list[i].name + '\n'
-            res += 'Выберите одного с помощью клавиатуры.'
-            reply_keyboardactors = [[i + 1 for i in range(n // 2)], [i + 1 for i in range(n // 2, n)]]
-            markupactorskeyboard = ReplyKeyboardMarkup(reply_keyboardactors, one_time_keyboard=False,
-                                                       resize_keyboard=True)
-            update.message.reply_text(res, reply_markup=markupactorskeyboard)
-            constant = ['actor chosen', actor_list]
-    elif constant[0] == 'actor chosen':
-        i = mes
-        actor = constant[1][i]
-        update.message.reply_text(
-            '{}\n{}-{}'.format(actor.name, actor.year_birth, actor.year_death), reply_markup=markup_main_keyboard)
-    elif constant[0] == 'film chosen':
-        i = mes
-        movie = constant[1][i]
-        update.message.reply_text(
-            'Полное название - {}.\n{}\nСлоган - {}\nГод - {}\nДлительность - {}\nРейтинг фильма - {}'.format(
-                movie.title, movie.plot, movie.tagline,
-                movie.year, movie.runtime, movie.rating), reply_markup=markup_main_keyboard)
+                ('{}, {} год рождения\nХотите увидеть фильмографию?'.format(actor.name, actor.year_birth)),
+                reply_markup=markup_yesornot)
+            constant = ['filmography', actor]
+    elif constant[0] == 'filmography':
+        res = ''
+        x = constant[1].career['actor']
+        x.reverse()
+        for el in constant[1].career['actor']:
+            res += '\n{}'.format(el.movie)
+        if mes != 'да':
+            res = 'Хорошо, вернёмся'
+        else:
+            res = 'Вот фильмография:' + res
+        update.message.reply_text(res, reply_markup=markup_main_keyboard)
+        constant = None
 
 
 def main():
