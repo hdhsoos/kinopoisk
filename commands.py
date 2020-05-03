@@ -47,7 +47,8 @@ def messages(update, context):
             movie = Movie(id=movie_list[0].id)
             movie.get_content('main_page')
             update.message.reply_text(
-                'Полное название - {}.\n{}\nСлоган - {}\nГод - {}\nДлительность - {}\nРейтинг фильма - {}\nХотите увидеть список актёров?'.format(
+                'Полное название - {}.\n{}\nСлоган - {}\nГод - {}\nДлительность - {}\nРейтинг фильма - {}'
+                '\nХотите увидеть список актёров?'.format(
                     movie.title, movie.plot, movie.tagline,
                     movie.year, movie.runtime, movie.rating), reply_markup=markup_yesornot)
             constant = ['cast', movie]
@@ -56,10 +57,7 @@ def messages(update, context):
         x = constant[1].actors
         for el in x[:10]:
             res += '\n{}'.format(el)
-        if mes == 'вернуться к началу':
-            res = 'Хорошо, вернёмся'
-        else:
-            res = 'В фильме снимались:' + res
+        res = 'В фильме снимались:' + res
         update.message.reply_text(res, reply_markup=markup_main_keyboard)
         constant = None
     elif constant == 'actor_search':
@@ -95,23 +93,18 @@ def messages(update, context):
         else:
             for el in constant[1].career['actor'][constant[2]:length_x]:
                 res += '\n{}'.format(el.movie)
-        if mes == 'вернуться к началу':
-            res = 'Хорошо, вернёмся'
-            update.message.reply_text(res, reply_markup=markup_main_keyboard)
-            constant = None
-        else:
-            if length_con == 2:
-                res = 'Вот фильмография:' + res
-                if length_x > 10:
-                    update.message.reply_text(res, reply_markup=markup_pages)
-                    constant = constant + [10]
-                else:
-                    update.message.reply_text(res, reply_markup=markup_main_keyboard)
-                    constant = None
-            elif constant[2] + 10 < length_x:
+        if length_con == 2:
+            res = 'Вот фильмография:' + res
+            if length_x > 10:
                 update.message.reply_text(res, reply_markup=markup_pages)
-                constant = constant[0:2] + [constant[2] + 10]
+                constant = constant + [10]
             else:
-                res += '\n\nФильмография кончилась.'
                 update.message.reply_text(res, reply_markup=markup_main_keyboard)
                 constant = None
+        elif constant[2] + 10 < length_x:
+            update.message.reply_text(res, reply_markup=markup_pages)
+            constant = constant[0:2] + [constant[2] + 10]
+        else:
+            res += '\n\nФильмография кончилась.'
+            update.message.reply_text(res, reply_markup=markup_main_keyboard)
+            constant = None
