@@ -1,0 +1,4 @@
+flask
+telegram
+kinopoiskpy
+python-telegram-bot
