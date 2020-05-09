@@ -37,7 +37,11 @@ def messages(update, context):
         update.message.reply_text("Хорошо, вернёмся.", reply_markup=markup_main_keyboard)
         constant = None
     elif constant == 'film_search':
-        movie_list = Movie.objects.search(mes)[:10]  # Список из всех фильмов результатов поиска, будет иметь длину 10
+        movie_list = Movie.objects.search(mes)
+        length = len(movie_list)
+        if length >= 10:
+            movie_list = Movie.objects.search(mes)[:10]
+            # Список из всех фильмов результатов поиска, будет иметь длину 10 или меньше
         length = len(movie_list)  # Чтобы постоянно не пересчитывать длину функции
         if length == 0:
             update.message.reply_text('Извините, фильма с таким названием не найдено. Вернёмся к началу.',
@@ -69,7 +73,10 @@ def messages(update, context):
         update.message.reply_text(res, reply_markup=markup_main_keyboard)
         constant = None
     elif constant == 'actor_search':
-        actor_list = Person.objects.search(mes)[:10]
+        actor_list = Person.objects.search(mes)
+        length = len(actor_list)
+        if length >= 10:
+            actor_list = Person.objects.search(mes)[:10]
         length = len(actor_list)
         if length == 0:
             update.message.reply_text('Извините, знаменитости с таким именем найти не удалось. Вернёмся к началу.',
