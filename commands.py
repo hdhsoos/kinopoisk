@@ -48,22 +48,16 @@ def messages(update, context):
                                       reply_markup=markup_main_keyboard)
             constant = None
         elif length >= 1:
-            res = 'Результаты поиска. Напишите номер фильма без точек или пробелов:'
-            for i in range(length):
-                res += '\n{}. {}'.format(i + 1, movie_list[i])  # Показываем все фильмы из результатов поиска
-            constant = ['chosen_film', movie_list]
-    elif constant[0] == 'chosen_film':
-        mes = int(mes)
-        movie = Movie(id=constant[1][mes - 1].id)  # Чтобы вызвать команду в следующей строке, нужно найти фильм по id
-        link = 'www.kinopoisk.ru/film/{}/'.format(constant[1][mes - 1].id)
-        movie.get_content('main_page')  # Обязательная команда, чтобы получить информацию кроме года и названия
-        update.message.reply_text(
-            'Полное название - {}.\n{}\nСлоган - {}\nГод - {}\nДлительность - {}\nРейтинг фильма - {}\n{}'
-            '\nХотите увидеть список актёров?'.format(
-                movie.title, movie.plot, movie.tagline,
-                movie.year, movie.runtime, movie.rating, link), reply_markup=markup_yesornot)
-        constant = ['cast', movie.actors]
-        # Передаём список, чтобы суметь обратить к списку актёров, если он нам понадобится
+            movie = Movie(id=movie_list[0].id)  # Чтобы вызвать команду в следующей строке, нужно найти фильм по id
+            link = 'www.kinopoisk.ru/film/{}/'.format(movie_list[0].id)
+            movie.get_content('main_page')  # Обязательная команда, чтобы получить информацию кроме года и названия
+            update.message.reply_text(
+                'Полное название - {}.\n{}\nСлоган - {}\nГод - {}\nДлительность - {}\nРейтинг фильма - {}\n{}'
+                '\nХотите увидеть список актёров?'.format(
+                    movie.title, movie.plot, movie.tagline,
+                    movie.year, movie.runtime, movie.rating, link), reply_markup=markup_yesornot)
+            constant = ['cast', movie.actors]
+            # Передаём список, чтобы суметь обратить к списку актёров, если он нам понадобится
     elif constant[0] == 'cast':
         res = ''
         x = constant[1]
@@ -83,19 +77,13 @@ def messages(update, context):
                                       reply_markup=markup_main_keyboard)
             constant = None
         elif length >= 1:
-            res = 'Результаты поиска. Напишите номер актёра без точек или пробелов:'
-            for i in range(length):
-                res += '\n{}. {}'.format(i + 1, actor_list[i])
-            constant = ['chosen_film', actor_list]
-    elif constant[0] == 'actor_chosen':
-        mes = int(mes)
-        actor = Person(id=constant[1][mes - 1].id)
-        link = 'www.kinopoisk.ru/name/{}/'.format(constant[1][mes - 1].id)
-        actor.get_content('main_page')
-        update.message.reply_text(
-            ('{}, {} год рождения\n{}\nХотите увидеть фильмографию?'.format(actor.name, actor.year_birth, link)),
-            reply_markup=markup_yesornot)
-        constant = ['filmography', actor.career['actor']]
+            actor = Person(id=actor_list[0].id)
+            link = 'www.kinopoisk.ru/name/{}/'.format(actor_list[0].id)
+            actor.get_content('main_page')
+            update.message.reply_text(
+                ('{}, {} год рождения\n{}\nХотите увидеть фильмографию?'.format(actor.name, actor.year_birth, link)),
+                reply_markup=markup_yesornot)
+            constant = ['filmography', actor.career['actor']]
     elif constant[0] == 'filmography':
         res = ''
         x = constant[1]
